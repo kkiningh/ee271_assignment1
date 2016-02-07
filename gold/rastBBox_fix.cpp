@@ -151,29 +151,36 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
   /   a quad or triangle can be determined by examing poly.vertices
   */
 
-  ur_x = 0 ;
-  ur_y = 0 ;
-  ll_x = 0 ;
-  ll_y = 0 ;
+  ur_x = poly.v[0].x[0];
+  ur_y = poly.v[0].x[1];
+  ll_x = poly.v[0].x[0];
+  ll_y = poly.v[0].x[1];
 
-  /////
-  ///// Bounding Box Function Goes Here
-  ///// 
-  
-  ///// PLACE YOUR CODE HERE
+  // find box
+  for (int i = 0; i < poly.vertices; i++) {
+    long x = poly.v[i].x[0];
+    long y = poly.v[i].x[1];
 
+    if (x > ur_x) ur_x = x;
+    if (x < ll_x) ll_x = x;
+    if (y > ur_y) ur_y = y;
+    if (y < ll_y) ll_y = y;
+  }
 
-  
-  
-  
-  
-  
+  // round box coordinates
+  ur_x = (ur_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ur_y = (ur_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_x = (ll_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_y = (ll_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
 
-  /////
-  ///// Bounding Box Function Goes Here
-  ///// 
+  // clip the bbox to the screen
+  ur_x = ur_x > screen_w ? screen_w : ur_x;
+  ur_y = ur_y > screen_h ? screen_h : ur_y;
+  ll_x = ll_x < 0 ? 0 : ll_x;
+  ll_y = ll_y < 0 ? 0 : ll_y;
 
-
+  // check to make sure the bbox is inside the screen
+  valid = ll_x <= ur_x && ll_y <= ur_y;
 }
 
 
@@ -205,34 +212,28 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   /
   */
 
+  long vs_x[4];
+  long vs_y[4];
+  for (int i = 0; i < poly.vertices; i++) {
+    vs_x[i] = poly.v[i].x[0] - s_x;
+    vs_y[i] = poly.v[i].x[1] - s_y;
+  }
 
+  long dist[4];
+  for (int i = 0; i < poly.vertices; i++) {
+    // calculate the index for the next index to compare to
+    int j = (i + 1) % poly.vertices;
 
-  int result = 0 ; // Default to miss state
+    // distances
+    dist[i] = vs_x[i] * vs_y[j] - vs_x[j] * vs_y[i];
+  }
 
-  /////
-  ///// Sample Test Function Goes Here
-  /////
+  int b = 1;
+  for (int i = 0; i < poly.vertices; i++) {
+    b = b && dist[i] <= 0;
+  }
 
-  ///// PLACE YOUR CODE HERE
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-  /////
-  ///// Sample Test Function Goes Here
-  /////
-
-  
-  return (result-1); //Return 0 if hit, otherwise return -1
+  return b - 1; // return 0 for all >= 0, -1 otherwise
 }
 
 
