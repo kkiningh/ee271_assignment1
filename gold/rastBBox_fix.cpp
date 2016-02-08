@@ -213,27 +213,44 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   */
 
   long vs_x[4];
+  vs_x[0] = poly.v[0].x[0] - s_x;
+  vs_x[1] = poly.v[1].x[0] - s_x;
+  vs_x[2] = poly.v[2].x[0] - s_x;
+  vs_x[3] = poly.v[3].x[0] - s_x;
+
   long vs_y[4];
-  for (int i = 0; i < poly.vertices; i++) {
-    vs_x[i] = poly.v[i].x[0] - s_x;
-    vs_y[i] = poly.v[i].x[1] - s_y;
+  vs_y[0] = poly.v[0].x[1] - s_y;
+  vs_y[1] = poly.v[1].x[1] - s_y;
+  vs_y[2] = poly.v[2].x[1] - s_y;
+  vs_y[3] = poly.v[3].x[1] - s_y;
+
+  long dist[6];
+  dist[0] = vs_x[0] * vs_y[1] - vs_x[1] * vs_y[0]; // 0-1 edge
+  dist[1] = vs_x[1] * vs_y[2] - vs_x[2] * vs_y[1]; // 1-2 edge
+  dist[2] = vs_x[2] * vs_y[3] - vs_x[3] * vs_y[2]; // 2-3 edge
+  dist[3] = vs_x[3] * vs_y[0] - vs_x[0] * vs_y[3]; // 3-0 edge
+  dist[4] = vs_x[1] * vs_y[3] - vs_x[3] * vs_y[1]; // 1-3 edge
+  dist[5] = vs_x[2] * vs_y[0] - vs_x[0] * vs_y[2]; // 2-0 edge
+
+  int b[6];
+  b[0] = dist[0] <= 0;
+  b[1] = dist[1] <  0;
+  b[2] = dist[2] <  0;
+  b[3] = dist[3] <= 0;
+  b[4] = dist[4] <  0;
+  b[5] = dist[5] <= 0;
+
+  int valid;
+  if (poly.vertices == 4) {
+    valid = ( b[1] &&  b[2] && !b[4]) ||
+            (!b[1] && !b[2] &&  b[4]) ||
+            ( b[0] &&  b[3] &&  b[4]) ||
+            (!b[0] && !b[3] && !b[4]);
+  } else {
+    valid = (b[0] && b[1] && b[5]);
   }
 
-  long dist[4];
-  for (int i = 0; i < poly.vertices; i++) {
-    // calculate the index for the next index to compare to
-    int j = (i + 1) % poly.vertices;
-
-    // distances
-    dist[i] = vs_x[i] * vs_y[j] - vs_x[j] * vs_y[i];
-  }
-
-  int b = 1;
-  for (int i = 0; i < poly.vertices; i++) {
-    b = b && dist[i] <= 0;
-  }
-
-  return b - 1; // return 0 for all >= 0, -1 otherwise
+  return valid - 1; // return 0 for all >= 0, -1 otherwise
 }
 
 
