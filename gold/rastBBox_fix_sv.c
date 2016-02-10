@@ -48,17 +48,36 @@ int rastBBox_bbox_check( int   v0_x,     //uPoly
   poly.v[3].x[1] = v3_y;
   poly.q = q;
 
-  //
-  //Copy Past C++ Bounding Box Function ****BEGIN****
-  //
-  // note that bool,true, and false are not in c
+  ur_x = poly.v[0].x[0];
+  ur_y = poly.v[0].x[1];
+  ll_x = poly.v[0].x[0];
+  ll_y = poly.v[0].x[1];
 
+  // find box
+  for (int i = 0; i < poly.q; i++) {
+    long x = poly.v[i].x[0];
+    long y = poly.v[i].x[1];
 
-			  
+    if (x > ur_x) ur_x = x;
+    if (x < ll_x) ll_x = x;
+    if (y > ur_y) ur_y = y;
+    if (y < ll_y) ll_y = y;
+  }
 
-  //
-  //Copy Past C++ Bounding Box Function ****END****
-  //
+  // round box coordinates
+  ur_x = (ur_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ur_y = (ur_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_x = (ll_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_y = (ll_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+
+  // clip the bbox to the screen
+  ur_x = ur_x > screen_w ? screen_w : ur_x;
+  ur_y = ur_y > screen_h ? screen_h : ur_y;
+  ll_x = ll_x < 0 ? 0 : ll_x;
+  ll_y = ll_y < 0 ? 0 : ll_y;
+
+  // check to make sure the bbox is inside the screen
+  valid = ll_x <= ur_x && ll_y <= ur_y;
 
   //Check if BBox matches
   correct = 1 ;
@@ -136,17 +155,43 @@ int rastBBox_stest_check( int   v0_x,      //uPoly
   poly.v[3].x[1] = v3_y;
   poly.q = q;
 
+  long vs_x[4];
+  vs_x[0] = poly.v[0].x[0] - s_x;
+  vs_x[1] = poly.v[1].x[0] - s_x;
+  vs_x[2] = poly.v[2].x[0] - s_x;
+  vs_x[3] = poly.v[3].x[0] - s_x;
 
-  //
-  //Copy Past C++ Sample Test Function ****BEGIN****
-  //
-  // note that bool,true, and false are not in c
+  long vs_y[4];
+  vs_y[0] = poly.v[0].x[1] - s_y;
+  vs_y[1] = poly.v[1].x[1] - s_y;
+  vs_y[2] = poly.v[2].x[1] - s_y;
+  vs_y[3] = poly.v[3].x[1] - s_y;
 
-  
+  long dist[6];
+  dist[0] = vs_x[0] * vs_y[1] - vs_x[1] * vs_y[0]; // 0-1 edge
+  dist[1] = vs_x[1] * vs_y[2] - vs_x[2] * vs_y[1]; // 1-2 edge
+  dist[2] = vs_x[2] * vs_y[3] - vs_x[3] * vs_y[2]; // 2-3 edge
+  dist[3] = vs_x[3] * vs_y[0] - vs_x[0] * vs_y[3]; // 3-0 edge
+  dist[4] = vs_x[1] * vs_y[3] - vs_x[3] * vs_y[1]; // 1-3 edge
+  dist[5] = vs_x[2] * vs_y[0] - vs_x[0] * vs_y[2]; // 2-0 edge
 
-  //
-  //Copy Past C++ Sample Test Function ****END****
-  //
+  int b[6];
+  b[0] = dist[0] <= 0;
+  b[1] = dist[1] <  0;
+  b[2] = dist[2] <  0;
+  b[3] = dist[3] <= 0;
+  b[4] = dist[4] <  0;
+  b[5] = dist[5] <= 0;
+
+  int valid;
+  if (poly.q == 4) {
+    result = ( b[1] &&  b[2] && !b[4]) ||
+            (!b[1] && !b[2] &&  b[4]) ||
+            ( b[0] &&  b[3] &&  b[4]) ||
+            (!b[0] && !b[3] && !b[4]);
+  } else {
+    result = (b[0] && b[1] && b[5]);
+  }
 
   //Check if Correct 
   correct = result == check_hit ;
@@ -190,22 +235,36 @@ int rastBBox_check( int   v0_x,      //uPoly
   poly.v[3].x[1] = v3_y;
   poly.q = q;
 
-  //
-  //Copy Past C++ Bounding Box Function ****BEGIN****
-  //
-  // note that bool,true, and false are not in c
+  ur_x = poly.v[0].x[0];
+  ur_y = poly.v[0].x[1];
+  ll_x = poly.v[0].x[0];
+  ll_y = poly.v[0].x[1];
 
+  // find box
+  for (int i = 0; i < poly.q; i++) {
+    long x = poly.v[i].x[0];
+    long y = poly.v[i].x[1];
 
-  
-  
-  
-  
-  
-  
+    if (x > ur_x) ur_x = x;
+    if (x < ll_x) ll_x = x;
+    if (y > ur_y) ur_y = y;
+    if (y < ll_y) ll_y = y;
+  }
 
-  //
-  //Copy Past C++ Bounding Box Function ****END****
-  //
+  // round box coordinates
+  ur_x = (ur_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ur_y = (ur_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_x = (ll_x >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+  ll_y = (ll_y >> (r_shift - ss_w_lg2)) << (r_shift - ss_w_lg2);
+
+  // clip the bbox to the screen
+  ur_x = ur_x > screen_w ? screen_w : ur_x;
+  ur_y = ur_y > screen_h ? screen_h : ur_y;
+  ll_x = ll_x < 0 ? 0 : ll_x;
+  ll_y = ll_y < 0 ? 0 : ll_y;
+
+  // check to make sure the bbox is inside the screen
+  valid = ll_x <= ur_x && ll_y <= ur_y;
 
 
   int s_x , sl_x ;
@@ -221,25 +280,43 @@ int rastBBox_check( int   v0_x,      //uPoly
       s_x = sl_x + (j_x << 2) ;
       s_y = sl_y + (j_y << 2) ;
 
-      //
-      //Copy Past C++ Sample Test Function ****BEGIN****
-      //
-      // note that bool,true, and false are not in c
-      
+  long vs_x[4];
+  vs_x[0] = poly.v[0].x[0] - s_x;
+  vs_x[1] = poly.v[1].x[0] - s_x;
+  vs_x[2] = poly.v[2].x[0] - s_x;
+  vs_x[3] = poly.v[3].x[0] - s_x;
 
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-  
-      //
-      //Copy Past C++ Sample Test Function ****END****
-      //
+  long vs_y[4];
+  vs_y[0] = poly.v[0].x[1] - s_y;
+  vs_y[1] = poly.v[1].x[1] - s_y;
+  vs_y[2] = poly.v[2].x[1] - s_y;
+  vs_y[3] = poly.v[3].x[1] - s_y;
+
+  long dist[6];
+  dist[0] = vs_x[0] * vs_y[1] - vs_x[1] * vs_y[0]; // 0-1 edge
+  dist[1] = vs_x[1] * vs_y[2] - vs_x[2] * vs_y[1]; // 1-2 edge
+  dist[2] = vs_x[2] * vs_y[3] - vs_x[3] * vs_y[2]; // 2-3 edge
+  dist[3] = vs_x[3] * vs_y[0] - vs_x[0] * vs_y[3]; // 3-0 edge
+  dist[4] = vs_x[1] * vs_y[3] - vs_x[3] * vs_y[1]; // 1-3 edge
+  dist[5] = vs_x[2] * vs_y[0] - vs_x[0] * vs_y[2]; // 2-0 edge
+
+  int b[6];
+  b[0] = dist[0] <= 0;
+  b[1] = dist[1] <  0;
+  b[2] = dist[2] <  0;
+  b[3] = dist[3] <= 0;
+  b[4] = dist[4] <  0;
+  b[5] = dist[5] <= 0;
+
+  if (poly.vertices == 4) {
+    result = ( b[1] &&  b[2] && !b[4]) ||
+            (!b[1] && !b[2] &&  b[4]) ||
+            ( b[0] &&  b[3] &&  b[4]) ||
+            (!b[0] && !b[3] && !b[4]);
+  } else {
+    result = (b[0] && b[1] && b[5]);
+  }
+
       
       count = result != 0 ? count+1 : count  ;
     }
